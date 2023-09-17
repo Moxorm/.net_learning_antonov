@@ -12,7 +12,7 @@ namespace PwServer.Models
         public int ID { get; set; }
         [Required]
         public string? Name { get; set; }
-        [Key]
+
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public string? Email { get; set; }
         [Required]

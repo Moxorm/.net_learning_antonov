@@ -1,7 +1,11 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PwServer.Models;
+using System.Security.Claims;
 using webapi.Data;
+using webapi.Helpers;
 
 namespace PwServer.Controllers
 {
@@ -29,37 +33,42 @@ namespace PwServer.Controllers
         //    .toarray();
         //}
 
-        [HttpGet]
-        [Route("api/Userinformation")]
-        public IActionResult Userinformation(string name)
-        {
-            var userInfo = new UserInfoModel();
-            try
-            {
+        //[HttpGet]
+        //[Route("api/Userinformation")]
+        //public async Task<IActionResult> Userinformation(string name)
+        //{
+        //    var userInfo = new UserInfoModel();
+        //    try
+        //    {
 
-                userInfo = _webapiContext.UserInfoModel.FirstOrDefault(x => EF.Functions.Like(x.Name, $"%{name}%"));
-            }
-            catch (Exception e)
-            {
-                return NotFound();
-            }
-            return Ok(userInfo);
-        }
+        //        userInfo = _webapiContext.UserInfoModel.FirstOrDefault(x => EF.Functions.Like(x.Name, $"%{name}%"));
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return NotFound();
+        //    }
+        //    return Ok(userInfo);
+        //}
 
         [HttpPost]
         [Route("api/CreateAccount")]
-        public IActionResult CreateAccount(string name, string email, string password)
+        public async Task<IActionResult> CreateAccount(string name, string email, string password)
         {
             try
             {
-                _webapiContext.UserInfoModel.Add(new UserInfoModel
+                var user = new UserInfoModel
                 {
                     Name = name,
                     Email = email,
-                    Password = password,
+                    Password = password.HashPassword(),
                     Amount = 500
-                });
+                };
+                _webapiContext.UserInfoModel.Add(user);
                 _webapiContext.SaveChanges();
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(
+                        AccountService.Authenticate(user)));
             }
             catch (Exception e)
             {
@@ -70,17 +79,48 @@ namespace PwServer.Controllers
 
         [HttpPost]
         [Route("api/Login")]
-        public IActionResult Login(string email, string password)
+        public async Task<IActionResult> Login(string email, string password)
         {
-            var msg = "error";
-            var result = !string.IsNullOrEmpty(msg)
-                ? BadRequest(msg)
-                : (IActionResult)Ok();
-            return result;
+            try
+            {
+                var user = _webapiContext.UserInfoModel.FirstOrDefault(x => x.Email == email);
+                if (user == null)
+                {
+                    return StatusCode(400, "user do not exist");
+                }
+                if (user.Password != password.HashPassword())
+                {
+                    return StatusCode(300, "wrong password");
+                }
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimsIdentity.DefaultNameClaimType, email),
+                    new Claim(ClaimsIdentity.DefaultRoleClaimType, "1"),
+                };
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(
+                        AccountService.Authenticate(user)));
+            }
+            catch (Exception e)
+            {
+                return StatusCode(500, e.Message);
+            }
+            return Ok();
         }
+
+/*        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            return RedirectToAction("Index", "Home");
+        }*/
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         [Route("api/CreateTransaction")]
         public IActionResult CreateTransaction(TransactionModel transactionModel)
         {
