@@ -6,6 +6,7 @@ using PwServer.Models;
 using System.Security.Claims;
 using webapi.Data;
 using webapi.Helpers;
+using webapi.Models;
 
 namespace PwServer.Controllers
 {
@@ -49,7 +50,22 @@ namespace PwServer.Controllers
         //    }
         //    return Ok(userInfo);
         //}
-
+        private static readonly string[] Summaries = new[]
+        {
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
+        [HttpGet]
+        [Route("GetWeatherForecast")]
+        public IEnumerable<WeatherForecast> Get()
+        {
+            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            {
+                Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                TemperatureC = Random.Shared.Next(-20, 55),
+                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
+            })
+            .ToArray();
+        }
         [HttpPost]
         [Route("api/CreateAccount")]
         public async Task<IActionResult> CreateAccount(string name, string email, string password)
@@ -120,8 +136,8 @@ namespace PwServer.Controllers
 
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        [Route("api/CreateTransaction")]
+        //[ValidateAntiForgeryToken]
+        [Route("CreateTransaction")]
         public IActionResult CreateTransaction(TransactionModel transactionModel)
         {
             try

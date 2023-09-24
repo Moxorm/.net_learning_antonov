@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PwServer.Models
 {
-    [Table("Transactions")]
+    [Table("TransactionModel")]
     public class TransactionModel
     {
         [Key]
