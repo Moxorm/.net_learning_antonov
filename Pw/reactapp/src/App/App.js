@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import './App.css';
 
 export default class App extends Component {
     static displayName = App.name;
@@ -24,7 +25,6 @@ export default class App extends Component {
                     </tr>
                 </thead>
                 <tbody>
-                    
                     {forecasts.map(forecast =>
                         <tr key={forecast.date}>
                             <td>{forecast.date}</td>
@@ -49,20 +49,41 @@ export default class App extends Component {
 
         return (
             <div>
-                <label>
+                <p>
                     Name:
                     <input type="text" id="Name" value={this.state.value} onChange={this.handleChange.bind(this)} default="" />
-                </label>
+                </p>
+                <p>
+                    Password:
+                    <input type="text" id="Password" value={this.state.value} onChange={this.handleChange.bind(this)} default="" />
+                </p>
+                <button type="button" onClick={this.login.bind(this)}>
+                    Login
+                </button>
                 <button type="button" onClick={this.createTransaction.bind(this)}>
-                    Click Me
+                    transaction
                 </button>
                 <h1 id="tabelLabel" >Weather forecast</h1>
                 <p>This component demonstrates fetching data from the server.</p>
-                {contents}
+                {/*contents*/}
             </div>
         );
     }
+    async login() {
+        //console.log(this.state.Name);
 
+        const fetchResponse = fetch('pw/Login?email=' + this.state.Name + '&password=' + this.state.Password,
+            {
+                method: "POST",
+                //headers: { 'Content-type': 'application/json' },
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Basic ' + btoa(this.state.Name + ':' + this.state.Password)
+                }
+            });
+        console.log(fetchResponse);
+    }
     async createTransaction() {
         //console.log(this.state.Name);
 
