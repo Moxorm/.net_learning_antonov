@@ -25,20 +25,25 @@ namespace PwServer.Controllers
 
         [HttpGet]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        [ResponseCache(Duration = 30)]
         [Route("TransactionHistory")]
-        public IActionResult TransactionHistory(int userId)
+        public IActionResult TransactionHistory()
         {
+            var transactions = new List<TransactionModel>();
             try
             {
-                var Sender = _webapiContext.UserInfoModel.Find(userId);
-                _webapiContext.TransactionModel.Select(x => x.Sender == userId || x.Recipinent == userId);
+                var id = HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+                    ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+                transactions = _webapiContext.TransactionModel
+                    .Where(x => x.Sender == int.Parse(id) || x.Recipinent == int.Parse(id))
+                    .Select(x => new TransactionModel(x)).ToList();
                 _webapiContext.SaveChanges();
             }
             catch (Exception e)
             {
                 return StatusCode(500, e.Message);
             }
-            return Ok();
+            return Ok(transactions);
         }
         [HttpPost]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]

@@ -24,7 +24,7 @@ namespace PwServer.Controllers
 
 
         [HttpPost]
-        [Route("api/CreateAccount")]
+        [Route("CreateAccount")]
         public async Task<IActionResult> CreateAccount(string name, string email, string password)
         {
             try
@@ -65,6 +65,7 @@ namespace PwServer.Controllers
                 {
                     new Claim(ClaimsIdentity.DefaultNameClaimType, email),
                     new Claim(ClaimsIdentity.DefaultRoleClaimType, "1"),
+                    new Claim(ClaimTypes.NameIdentifier,user.ID.ToString()),
                 };
                 var claimsIdentity = new ClaimsIdentity(
                     claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -95,7 +96,7 @@ namespace PwServer.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet] 
         [Route("Userinformation")]
         [ResponseCache(Duration = 30)]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
