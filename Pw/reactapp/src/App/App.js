@@ -43,7 +43,7 @@ export default class App extends Component {
     }
 
     render() {
-        //let response = this.Userinformation().bind(this)
+        let response = this.Userinformation();
 
         return (
             <div>
@@ -79,7 +79,7 @@ export default class App extends Component {
         console.log(fetchResponse);
     }
     async logout() {
-
+        
         const fetchResponse = fetch('account/Logout',
             {
                 method: "POST",
@@ -92,7 +92,7 @@ export default class App extends Component {
     }
     async Userinformation() {
 
-        const fetchResponse = fetch('account/Userinformation',
+        const response = fetch('account/UserInformation',
             {
                 method: "Get",
                 headers: {
@@ -100,22 +100,24 @@ export default class App extends Component {
                     'Content-Type': 'application/json'
                 }
             });
-        return fetchResponse;
+        //var data = await response;
+        return response.json;
     }
     async createTransaction() {
 
-        //let TransactionModel = {
-        //    Amount: 1,
-        //    Sender: 13,
-        //    Recipinent: 12,
-       // };
-        const fetchResponse = fetch('pw/CreateTransaction?amount=' + 1/*this.state.Amount*/ + '&recipinent=' + 19,//this.state.Recipinent,
+        let TransactionModel = {
+            Amount: 1,
+            Sender: 13,
+            Recipinent: 12,
+        };
+        const fetchResponse = fetch('pw/CreateTransaction',
             {
                 method: "POST",
                 headers: { 'Content-type': 'application/json' },
-                //body: JSON.stringify(TransactionModel)
+                body: JSON.stringify(TransactionModel)
             });
-        console.log(fetchResponse);
+        let a = fetchResponse.response.state;
+        console.log(fetchResponse.response.state);
         //const data = await response.json();
         //this.setState({ forecasts: data, loading: false });
 

@@ -28,7 +28,7 @@ namespace PwServer.Controllers
 
         [HttpPost]
         [Route("CreateAccount")]
-        public async Task<IActionResult> CreateAccount(UserInfoModel user)
+        public IActionResult CreateAccount(UserInfoModel user)
         {
             try
             {
@@ -52,7 +52,7 @@ namespace PwServer.Controllers
 
         [HttpPost]
         [Route("Login")]
-        public async Task<IActionResult> Login(string email, string password)
+        public IActionResult Login(string email, string password)
         {
             try
             {
@@ -87,16 +87,16 @@ namespace PwServer.Controllers
         [HttpPost]
         [Route("Logout")]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> Logout()
+        public IActionResult Logout()
         {
             try
             {
                 HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                return StatusCode(500);
+                return StatusCode(500, e.Message);
             }
         }
 
@@ -115,7 +115,7 @@ namespace PwServer.Controllers
             }
             catch (Exception e)
             {
-                return NotFound();
+                return StatusCode(500, e.Message);
             }
             return Ok(userInfo);
         }
@@ -135,7 +135,7 @@ namespace PwServer.Controllers
             }
             catch (Exception e)
             {
-                return NotFound();
+                return StatusCode(500, e.Message);
             }
             return Ok(userInfo);
         }
