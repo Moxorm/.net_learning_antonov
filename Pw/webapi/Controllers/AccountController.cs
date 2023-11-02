@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using PwServer.Models;
+using System.Net;
 using System.Security.Claims;
+using System.Web.Http.ModelBinding;
 using webapi.Data;
 using webapi.Helpers;
 using webapi.Models;
@@ -25,17 +28,18 @@ namespace PwServer.Controllers
 
         [HttpPost]
         [Route("CreateAccount")]
-        public async Task<IActionResult> CreateAccount(string name, string email, string password)
+        public async Task<IActionResult> CreateAccount(UserInfoModel user)
         {
             try
             {
-                var user = new UserInfoModel
+                user.Amount = 500;
+                user.Password = user.Password.HashPassword();
+
+                if (_webapiContext.UserInfoModel.Where(x => x.Email == user.Email).Count() != 0)
                 {
-                    Name = name,
-                    Email = email,
-                    Password = password.HashPassword(),
-                    Amount = 500
-                };
+                    return StatusCode(409, "thim email alredy used");
+                }
+
                 _webapiContext.UserInfoModel.Add(user);
                 _webapiContext.SaveChanges();
             }
@@ -97,17 +101,37 @@ namespace PwServer.Controllers
         }
 
         [HttpGet] 
-        [Route("Userinformation")]
+        [Route("UserInformation")]
         [ResponseCache(Duration = 30)]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
-        public async Task<IActionResult> Userinformation()
+        public async Task<IActionResult> UserInformation()
         {
-            var userInfo = new UserInfoModel();
+            var userInfo = new MyUserInfo();
             try
             {
                 var email = HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
                     ?.Claims?.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType)?.Value;
-                userInfo = _webapiContext.UserInfoModel.FirstOrDefault(x => x.Email == email);
+                userInfo = new MyUserInfo(_webapiContext.UserInfoModel.FirstOrDefault(x => x.Email == email));
+            }
+            catch (Exception e)
+            {
+                return NotFound();
+            }
+            return Ok(userInfo);
+        }
+
+        [HttpGet]
+        [Route("AllUsersInformation")]
+        [ResponseCache(Duration = 30)]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> AllUsersInformation()
+        {
+            var userInfo = new List<UsersInfo>();
+            try
+            {
+                var email = HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+                    ?.Claims?.FirstOrDefault(x => x.Type == ClaimsIdentity.DefaultNameClaimType)?.Value;
+                userInfo = _webapiContext.UserInfoModel.Select(x => new UsersInfo(x)).ToList();
             }
             catch (Exception e)
             {

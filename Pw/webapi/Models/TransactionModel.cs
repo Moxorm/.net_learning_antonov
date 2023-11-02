@@ -19,12 +19,14 @@ namespace PwServer.Models
         }
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ID { get; set; }
+        public uint ID { get; set; }
+
         [Required]
-        public int Amount { get; set; }
+        [Range(0, uint.MaxValue)]
+        public uint Amount { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        public uint Sender { get; set; }
         [Required]
-        public int Sender { get; set; }
-        [Required]
-        public int Recipinent { get; set; }
+        public uint Recipinent { get; set; }
     }
 }

@@ -6,8 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using PwServer.Models;
 using System.Security.Claims;
 using webapi.Data;
-using webapi.Helpers;
-using webapi.Models;
 
 namespace PwServer.Controllers
 {
@@ -45,32 +43,27 @@ namespace PwServer.Controllers
             }
             return Ok(transactions);
         }
+
         [HttpPost]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("CreateTransaction")]
-        public IActionResult CreateTransaction(int amount, int recipinent)
+        public IActionResult CreateTransaction(TransactionModel transaction)
         {
             try
             {
-                var id = int.Parse(HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
-                    ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value);
+                var id = uint.Parse(HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+                    ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "No user");
                 
                 var Sender = _webapiContext.UserInfoModel.Find(id);
-                if (Sender.Amount < amount)
+                if (Sender.Amount < transaction.Amount)
                 {
                     return StatusCode(300, "Not enought money");
                 }
-                Sender.Amount -= amount;
+                Sender.Amount -= transaction.Amount;
 
-                var transactionModel = new TransactionModel
-                {
-                    Amount = amount,
-                    Recipinent = recipinent,
-                    Sender = id,
-                };
-
-                _webapiContext.UserInfoModel.Find(transactionModel.Recipinent).Amount += transactionModel.Amount;
-                _webapiContext.TransactionModel.Add(transactionModel);
+                transaction.Sender = id;
+                _webapiContext.UserInfoModel.Find(transaction.Recipinent).Amount += transaction.Amount;
+                _webapiContext.TransactionModel.Add(transaction);
                 _webapiContext.SaveChanges();
             }
             catch (Exception e)
