@@ -43,9 +43,7 @@ export default class App extends Component {
     }
 
     render() {
-        let contents = this.state.loading
-            ? <p><em>Loading... Please refresh once the ASP.NET backend has started. See <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for more details.</em></p>
-            : App.renderForecastsTable(this.state.forecasts);
+        //let response = this.Userinformation().bind(this)
 
         return (
             <div>
@@ -63,19 +61,15 @@ export default class App extends Component {
                 <button type="button" onClick={this.createTransaction.bind(this)}>
                     transaction
                 </button>
-                <h1 id="tabelLabel" >Weather forecast</h1>
-                <p>This component demonstrates fetching data from the server.</p>
-                {/*contents*/}
+
             </div>
         );
     }
     async login() {
-        //console.log(this.state.Name);
 
-        const fetchResponse = fetch('pw/Login?email=' + this.state.Name + '&password=' + this.state.Password,
+        const fetchResponse = fetch('account/Login?email=' + this.state.Name + '&password=' + this.state.Password,
             {
                 method: "POST",
-                //headers: { 'Content-type': 'application/json' },
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
@@ -84,31 +78,47 @@ export default class App extends Component {
             });
         console.log(fetchResponse);
     }
+    async logout() {
+
+        const fetchResponse = fetch('account/Logout',
+            {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                }
+            });
+        console.log(fetchResponse);
+    }
+    async Userinformation() {
+
+        const fetchResponse = fetch('account/Userinformation',
+            {
+                method: "Get",
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        return fetchResponse;
+    }
     async createTransaction() {
-        //console.log(this.state.Name);
 
-        let TransactionModel = {
-            Amount: 1,
-            Sender: 13,
-            Recipinent: 12,
-
-        };
-        const fetchResponse = fetch('pw/CreateTransaction',
+        //let TransactionModel = {
+        //    Amount: 1,
+        //    Sender: 13,
+        //    Recipinent: 12,
+       // };
+        const fetchResponse = fetch('pw/CreateTransaction?amount=' + 1/*this.state.Amount*/ + '&recipinent=' + 19,//this.state.Recipinent,
             {
                 method: "POST",
                 headers: { 'Content-type': 'application/json' },
-                body: JSON.stringify(TransactionModel)
+                //body: JSON.stringify(TransactionModel)
             });
         console.log(fetchResponse);
         //const data = await response.json();
         //this.setState({ forecasts: data, loading: false });
 
-    }
-
-    async populateWeatherData() {
-        const response = await fetch('pw/GetWeatherForecast');
-        const data = await response.json();
-        this.setState({ forecasts: data, loading: false });
     }
 
 

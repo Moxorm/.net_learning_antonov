@@ -80,7 +80,7 @@ namespace PwServer.Controllers
             return Ok();
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("Logout")]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         public async Task<IActionResult> Logout()

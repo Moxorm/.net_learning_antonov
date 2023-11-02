@@ -48,16 +48,27 @@ namespace PwServer.Controllers
         [HttpPost]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         [Route("CreateTransaction")]
-        public IActionResult CreateTransaction(TransactionModel transactionModel)
+        public IActionResult CreateTransaction(int amount, int recipinent)
         {
             try
             {
-                var Sender = _webapiContext.UserInfoModel.Find(transactionModel.Sender);
-                if (Sender.Amount < transactionModel.Amount)
+                var id = int.Parse(HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
+                    ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value);
+                
+                var Sender = _webapiContext.UserInfoModel.Find(id);
+                if (Sender.Amount < amount)
                 {
                     return StatusCode(300, "Not enought money");
                 }
-                Sender.Amount -= transactionModel.Amount;
+                Sender.Amount -= amount;
+
+                var transactionModel = new TransactionModel
+                {
+                    Amount = amount,
+                    Recipinent = recipinent,
+                    Sender = id,
+                };
+
                 _webapiContext.UserInfoModel.Find(transactionModel.Recipinent).Amount += transactionModel.Amount;
                 _webapiContext.TransactionModel.Add(transactionModel);
                 _webapiContext.SaveChanges();
