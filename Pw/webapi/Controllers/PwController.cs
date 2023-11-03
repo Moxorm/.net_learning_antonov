@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using PwServer.Models;
 using System.Security.Claims;
 using webapi.Data;
+using webapi.Models;
 
 namespace PwServer.Controllers
 {
@@ -27,15 +28,14 @@ namespace PwServer.Controllers
         [Route("TransactionHistory")]
         public IActionResult TransactionHistory()
         {
-            var transactions = new List<TransactionModel>();
+            var transactions = new List<TransactionModelHistory>();
             try
             {
                 var id = HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
                     ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
                 transactions = _webapiContext.TransactionModel
                     .Where(x => x.Sender == int.Parse(id) || x.Recipinent == int.Parse(id))
-                    .Select(x => new TransactionModel(x)).ToList();
-                _webapiContext.SaveChanges();
+                    .Select(x => new TransactionModelHistory(x)).ToList();
             }
             catch (Exception e)
             {
@@ -51,6 +51,11 @@ namespace PwServer.Controllers
         {
             try
             {
+                if (transaction.Sender == transaction.Recipinent)
+                {
+                    return StatusCode(400, "You cannot transfer to the same account");
+                }
+
                 var id = uint.Parse(HttpContext.User.Identities.FirstOrDefault(x => x.AuthenticationType == CookieAuthenticationDefaults.AuthenticationScheme)
                     ?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value ?? "No user");
                 
@@ -62,6 +67,7 @@ namespace PwServer.Controllers
                 Sender.Amount -= transaction.Amount;
 
                 transaction.Sender = id;
+                transaction.Date = DateTime.UtcNow;
                 _webapiContext.UserInfoModel.Find(transaction.Recipinent).Amount += transaction.Amount;
                 _webapiContext.TransactionModel.Add(transaction);
                 _webapiContext.SaveChanges();
